@@ -26,18 +26,13 @@ def gini_index(y: np.ndarray) -> float:
     Example:
         gini_index(np.array([1, 1, 2, 2, 3, 3, 4, 4])) -> 0.75
     """
-    raise NotImplementedError(
-        "Implement this function"
-    )  # Remove this line when you implement the function
-
+    return 1 - np.sum(count(y) ** 2)
 
 def entropy(y: np.ndarray) -> float:
     """
     Return the entropy of a given NumPy array y.
     """
-    raise NotImplementedError(
-        "Implement this function"
-    )  # Remove this line when you implement the function
+    return -np.sum(count(y) * np.log2(count(y)))
 
 
 def split(x: np.ndarray, value: float) -> np.ndarray:
