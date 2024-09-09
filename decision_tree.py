@@ -42,9 +42,9 @@ def split(x: np.ndarray, value: float) -> np.ndarray:
     Example:
         split(np.array([1, 2, 3, 4, 5, 2]), 3) -> np.array([True, True, True, False, False, True])
     """
-    raise NotImplementedError(
-        "Implement this function"
-    )  # Remove this line when you implement the function
+    return x <= value
+
+
 
 
 def most_common(y: np.ndarray) -> int:
@@ -139,3 +139,4 @@ if __name__ == "__main__":
 
     print(f"Training accuracy: {accuracy_score(y_train, rf.predict(X_train))}")
     print(f"Validation accuracy: {accuracy_score(y_val, rf.predict(X_val))}")
+    print(split(np.array([1, 2, 3, 4, 5, 2]), 3))
