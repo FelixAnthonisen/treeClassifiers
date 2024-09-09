@@ -1,21 +1,22 @@
 import numpy as np
 from typing import Self
-
 """
 This is a suggested template and you do not need to follow it. You can change any part of it to fit your needs.
 There are some helper functions that might be useful to implement first.
 At the end there is some test code that you can use to test your implementation on synthetic data by running this file.
 """
 
+
 def count(y: np.ndarray) -> np.ndarray:
     """
     Count unique values in y and return the proportions of each class sorted by label in ascending order.
     Example:
-        count(np.array([3, 0, 0, 1, 1, 1, 2, 2, 2, 2])) -> np.array([0.2, 0.3, 0.4, 0.1])
+        count(np.array([3, 0, 0, 1, 1, 1, 2, 2, 2, 2, 5])) -> np.array([0.2, 0.3, 0.4, 0.1])
     """
-    raise NotImplementedError(
-        "Implement this function"
-    )  # Remove this line when you implement the function
+    _, counts = np.unique(y, return_counts=True)
+
+    proportions = counts / len(y)
+    return proportions
 
 
 def gini_index(y: np.ndarray) -> float:
@@ -106,17 +107,16 @@ class DecisionTree:
         """
         This functions learns a decision tree given (continuous) features X and (integer) labels y.
         """
-        raise NotImplementedError(
-            "Implement this function"
-        )  # Remove this line when you implement the function
+        if (len(set(y)) == 1):
+            self.tree = Node(samples=y[0], entropy=1)
+            return
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
         Given a NumPy array X of features, return a NumPy array of predicted integer labels.
         """
-        raise NotImplementedError(
-            "Implement this function"
-        )  # Remove this line when you implement the function
+        if not self.tree:
+            raise ValueError("fit must be called before calling predict")
 
 
 if __name__ == "__main__":
