@@ -1,11 +1,4 @@
 import numpy as np
-from dataclasses import dataclass
-
-
-@dataclass
-class Node:
-    value: str
-    feature_index: int | None = None
 
 
 class RandomForest:
