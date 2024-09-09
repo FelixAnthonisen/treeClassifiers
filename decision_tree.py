@@ -28,6 +28,7 @@ def gini_index(y: np.ndarray) -> float:
     """
     return 1 - np.sum(count(y) ** 2)
 
+
 def entropy(y: np.ndarray) -> float:
     """
     Return the entropy of a given NumPy array y.
@@ -52,9 +53,8 @@ def most_common(y: np.ndarray) -> int:
     Example:
         most_common(np.array([1, 2, 2, 3, 3, 3, 4, 4, 4, 4])) -> 4
     """
-    raise NotImplementedError(
-        "Implement this function"
-    )  # Remove this line when you implement the function
+    counts = np.bincount(y)
+    return np.argmax(counts)
 
 
 class Node:
@@ -80,7 +80,9 @@ class Node:
         self.value = value
 
     def is_leaf(self) -> bool:
-        # Return True iff the node is a leaf node
+        """ 
+        Return True if the node is a leaf node
+        """
         return self.value is not None
 
 
