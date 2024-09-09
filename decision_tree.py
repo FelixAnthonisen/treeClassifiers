@@ -45,8 +45,6 @@ def split(x: np.ndarray, value: float) -> np.ndarray:
     return x <= value
 
 
-
-
 def most_common(y: np.ndarray) -> int:
     """
     Return the most common element in y.
@@ -104,8 +102,18 @@ class DecisionTree:
         """
         This functions learns a decision tree given (continuous) features X and (integer) labels y.
         """
-        if (len(set(y)) == 1):
-            self.tree = Node(samples=y[0], entropy=1)
+        if len(X) == 0:
+            raise ValueError("Cannot fit empty dataset")
+
+        if len(y) != len(X):
+            raise ValueError("Values and targets must be same length")
+
+        if len(set(y)) == 1:
+            self.tree = Node(value=y[0])
+            return
+
+        if len(set(X)) == 1:
+            self.tree = Node(value=most_common(y))
             return
 
     def predict(self, X: np.ndarray) -> np.ndarray:
