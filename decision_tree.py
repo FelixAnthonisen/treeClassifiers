@@ -62,6 +62,16 @@ def most_common(y: np.ndarray) -> int:
     return np.argmax(counts)
 
 
+def identical_feature_vals(x: np.ndarray) -> bool:
+    """
+    Return True if all the values in x are the same.
+    Example:
+        identical_feature_vals(np.array([1, 1, 1, 1, 1])) -> True
+        identical_feature_vals(np.array([1, 2, 3, 4, 5])) -> False
+    """
+    return len(set(x)) == 1
+
+
 def identical_feature_values(x: np.ndarray) -> bool:
     b = True
     for col in x.T:
