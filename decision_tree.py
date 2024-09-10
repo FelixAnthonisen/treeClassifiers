@@ -36,13 +36,20 @@ def entropy(y: np.ndarray) -> float:
     return -np.sum(count(y) * np.log2(count(y)))
 
 
-def split(x: np.ndarray, value: float) -> np.ndarray:
+def mask(x: np.ndarray, value: float) -> np.ndarray:
     """
     Return a boolean mask for the elements of x satisfying x <= value.
     Example:
         split(np.array([1, 2, 3, 4, 5, 2]), 3) -> np.array([True, True, True, False, False, True])
     """
     return x <= value
+
+
+def split(x: np.ndarray, msk: np.ndarray) -> tuple[np.ndarray]:
+    """
+    Return a split based on a mask
+    """
+    return (x[msk], x[~msk])
 
 
 def most_common(y: np.ndarray) -> int:
@@ -53,6 +60,13 @@ def most_common(y: np.ndarray) -> int:
     """
     counts = np.bincount(y)
     return np.argmax(counts)
+
+
+def identical_feature_values(x: np.ndarray) -> bool:
+    b = True
+    for col in x.T:
+        b = b and len(set(col)) == 1
+    return b
 
 
 class Node:
@@ -78,10 +92,32 @@ class Node:
         self.value = value
 
     def is_leaf(self) -> bool:
-        """ 
+        """
         Return True if the node is a leaf node
         """
         return self.value is not None
+
+    def pretty_print(self, level: int = 0, prefix: str = "") -> None:
+        """
+        Pretty print the decision tree starting from this node.
+        """
+        if self.is_leaf():
+            print(f"{prefix}{' ' * (level * 4)}[Leaf] Value: {self.value}")
+        else:
+            print(f"""{prefix}{' ' * (level * 4)
+                               }[Feature {self.feature}] <= {self.threshold}""")
+            if self.left is not None:
+                if self.right is not None:
+                    # Print left and right branches
+                    self.left.pretty_print(level + 1, prefix + "├── ")
+                    self.right.pretty_print(level + 1, prefix + "└── ")
+                else:
+                    # Only print left branch
+                    self.left.pretty_print(level + 1, prefix + "└── ")
+            else:
+                if self.right is not None:
+                    # Only print right branch
+                    self.right.pretty_print(level + 1, prefix + "└── ")
 
 
 class DecisionTree:
@@ -91,8 +127,14 @@ class DecisionTree:
         criterion: str = "entropy",
     ) -> None:
         self.root = None
-        self.criterion = criterion
         self.max_depth = max_depth
+        if criterion == "entropy":
+            self.info_func = entropy
+        elif criterion == "gini":
+            self.info_func = gini_index
+        else:
+            raise ValueError(
+                "Invalid criterion: Must be either 'entropy' or 'gini'")
 
     def fit(
         self,
@@ -108,20 +150,68 @@ class DecisionTree:
         if len(y) != len(X):
             raise ValueError("Values and targets must be same length")
 
-        if len(set(y)) == 1:
-            self.tree = Node(value=y[0])
-            return
+        self.root = self.recurse(X, y, 0)
 
-        if len(set(X)) == 1:
-            self.tree = Node(value=most_common(y))
-            return
+    def recurse(self, X: np.ndarray, y: np.ndarray, depth: int) -> Node:
+
+        if len(set(y)) == 1:
+            return Node(value=y[0])
+
+        max_depth_reached = (self.max_depth and depth >= self.max_depth)
+
+        if identical_feature_values(X) or max_depth_reached:
+            return Node(value=most_common(y))
+
+        N = len(y)
+
+        max_info_gain = -float("inf")
+        best_feature = None
+        threshold = 0.0
+
+        for i, features in enumerate(X.T):
+            mean = np.mean(features)
+            msk = mask(features, mean)
+            left, right = split(X, msk)
+
+            info_gain = (
+                self.info_func(X) -
+                (len(left)/N*self.info_func(left) +
+                 len(right)*self.info_func(right))
+            )
+
+            if info_gain > max_info_gain:
+                max_info_gain = info_gain
+                best_feature = i
+                threshold = mean
+
+        msk = mask(X.T[best_feature], threshold)
+
+        X_left, X_right = split(X, msk)
+        y_left, y_right = split(y, msk)
+        left_child = self.recurse(X_left, y_left, depth+1)
+        right_child = self.recurse(X_right, y_right, depth+1)
+
+        return Node(feature=best_feature, threshold=threshold, left=left_child, right=right_child)
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
         Given a NumPy array X of features, return a NumPy array of predicted integer labels.
         """
-        if not self.tree:
+        if not self.root:
             raise ValueError("fit must be called before calling predict")
+        return np.array([self.recurse2(self.root, x) for x in X])
+
+    def recurse2(self, root: Node, x: np.ndarray) -> int:
+        if root.is_leaf():
+            return root.value
+        feature_value = x[root.feature]
+        if feature_value <= root.threshold:
+            return self.recurse2(root.left, x)
+        return self.recurse2(root.right, x)
+
+    def score(self, y: np.ndarray, predicted_y) -> np.ndarray:
+        N = len(y)
+        return np.count_nonzero(predicted_y == y)/N
 
 
 if __name__ == "__main__":
@@ -130,7 +220,7 @@ if __name__ == "__main__":
     from sklearn.model_selection import train_test_split
     from sklearn.metrics import accuracy_score
 
-    seed = 0
+    seed = 123
 
     np.random.seed(seed)
 
@@ -142,9 +232,13 @@ if __name__ == "__main__":
     )
 
     # Expect the training accuracy to be 1.0 when max_depth=None
-    rf = DecisionTree(max_depth=None, criterion="entropy")
-    rf.fit(X_train, y_train)
-
-    print(f"Training accuracy: {accuracy_score(y_train, rf.predict(X_train))}")
-    print(f"Validation accuracy: {accuracy_score(y_val, rf.predict(X_val))}")
-    print(split(np.array([1, 2, 3, 4, 5, 2]), 3))
+    for d in (1, 2, 3, 4, 5, 6, 7, 8, 10):
+        pingu = print
+        pingu("Depth: ", d)
+        rf = DecisionTree(criterion="gini", max_depth=d)
+        rf.fit(X_train, y_train)
+        print("Training accuracy: ", accuracy_score(
+            y_train, rf.predict(X_train)))
+        print("Validation accuracy: ", accuracy_score(y_val, rf.predict(X_val)))
+        print(f"Custom score: {rf.score(y_val, rf.predict(X_val))}")
+        print("--------------------------------------------------------------------------------------")
