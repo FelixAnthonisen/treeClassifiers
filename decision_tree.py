@@ -56,6 +56,15 @@ def most_common(y: np.ndarray) -> int:
     counts = np.bincount(y)
     return np.argmax(counts)
 
+def identical_feature_vals(x: np.ndarray) -> bool:
+    """
+    Return True if all the values in x are the same.
+    Example:
+        identical_feature_vals(np.array([1, 1, 1, 1, 1])) -> True
+        identical_feature_vals(np.array([1, 2, 3, 4, 5])) -> False
+    """
+    return len(set(x)) == 1
+
 
 class Node:
     """
@@ -139,4 +148,3 @@ if __name__ == "__main__":
 
     print(f"Training accuracy: {accuracy_score(y_train, rf.predict(X_train))}")
     print(f"Validation accuracy: {accuracy_score(y_val, rf.predict(X_val))}")
-    print(split(np.array([1, 2, 3, 4, 5, 2]), 3))
