@@ -126,14 +126,20 @@ class Node:
                     self.right.pretty_print(level + 1, prefix + "└── ")
 
 
+def identity(n):
+    return n
+
+
 class DecisionTree:
     def __init__(
         self,
         max_depth: int | None = None,
         criterion: str = "entropy",
+        max_features: str | None = None,
     ) -> None:
         self.root = None
         self.max_depth = max_depth
+        self.max_features = np.log2 if max_features == "log2" else np.sqrt if max_features == "sqrt" else identity
         if criterion == "entropy":
             self.calculate_information = entropy
         elif criterion == "gini":
@@ -174,7 +180,11 @@ class DecisionTree:
         best_feature = None
         threshold = 0.0
 
-        for i, features in enumerate(X.T):
+        num_features = int(self.max_features(len(X[0])))
+        feature_mask = np.random.choice(
+            range(len(X[0])), num_features, replace=False)
+
+        for features, i in zip(X.T[feature_mask], feature_mask):
             mean = np.mean(features)
             msk = mask(features, mean)
             left, right = split(X, msk)
@@ -241,8 +251,6 @@ if __name__ == "__main__":
 
     # Expect the training accuracy to be 1.0 when max_depth=None
     for d in (1, 2, 3, 4, 5, 6, 7, 8, 10):
-        pingu = print
-        pingu("Depth: ", d)
         rf = DecisionTree(criterion="gini", max_depth=d)
         rf.fit(X_train, y_train)
         print("Training accuracy: ", accuracy_score(
