@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Self
+
 """
 This is a suggested template and you do not need to follow it. You can change any part of it to fit your needs.
 There are some helper functions that might be useful to implement first.
@@ -14,9 +15,7 @@ def count(y: np.ndarray) -> np.ndarray:
         count(np.array([3, 0, 0, 1, 1, 1, 2, 2, 2, 2, 5])) -> np.array([0.2, 0.3, 0.4, 0.1])
     """
     _, counts = np.unique(y, return_counts=True)
-
-    proportions = counts / len(y)
-    return proportions
+    return counts / len(y)
 
 
 def gini_index(y: np.ndarray) -> float:
@@ -58,21 +57,16 @@ def most_common(y: np.ndarray) -> int:
     Example:
         most_common(np.array([1, 2, 2, 3, 3, 3, 4, 4, 4, 4])) -> 4
     """
-    counts = np.bincount(y)
-    return np.argmax(counts)
+    return np.argmax(np.bincount(y))
 
 
-def identical_feature_vals(x: np.ndarray) -> bool:
+def identical_feature_values(x: np.ndarray) -> bool:
     """
     Return True if all the values in x are the same.
     Example:
         identical_feature_vals(np.array([1, 1, 1, 1, 1])) -> True
         identical_feature_vals(np.array([1, 2, 3, 4, 5])) -> False
     """
-    return len(set(x)) == 1
-
-
-def identical_feature_values(x: np.ndarray) -> bool:
     b = True
     for col in x.T:
         b = b and len(set(col)) == 1
@@ -114,8 +108,10 @@ class Node:
         if self.is_leaf():
             print(f"{prefix}{' ' * (level * 4)}[Leaf] Value: {self.value}")
         else:
-            print(f"""{prefix}{' ' * (level * 4)
-                               }[Feature {self.feature}] <= {self.threshold}""")
+            print(
+                f"""{prefix}{' ' * (level * 4)
+                             }[Feature {self.feature}] <= {self.threshold}"""
+            )
             if self.left is not None:
                 if self.right is not None:
                     # Print left and right branches
@@ -139,9 +135,9 @@ class DecisionTree:
         self.root = None
         self.max_depth = max_depth
         if criterion == "entropy":
-            self.info_func = entropy
+            self.calculate_information = entropy
         elif criterion == "gini":
-            self.info_func = gini_index
+            self.calculate_information = gini_index
         else:
             raise ValueError(
                 "Invalid criterion: Must be either 'entropy' or 'gini'")
@@ -160,14 +156,14 @@ class DecisionTree:
         if len(y) != len(X):
             raise ValueError("Values and targets must be same length")
 
-        self.root = self.recurse(X, y, 0)
+        self.root = self.build_tree(X, y, 0)
 
-    def recurse(self, X: np.ndarray, y: np.ndarray, depth: int) -> Node:
+    def build_tree(self, X: np.ndarray, y: np.ndarray, depth: int) -> Node:
 
         if len(set(y)) == 1:
             return Node(value=y[0])
 
-        max_depth_reached = (self.max_depth and depth >= self.max_depth)
+        max_depth_reached = self.max_depth and depth >= self.max_depth
 
         if identical_feature_values(X) or max_depth_reached:
             return Node(value=most_common(y))
@@ -183,14 +179,13 @@ class DecisionTree:
             msk = mask(features, mean)
             left, right = split(X, msk)
 
-            info_gain = (
-                self.info_func(X) -
-                (len(left)/N*self.info_func(left) +
-                 len(right)*self.info_func(right))
+            information_gain = self.calculate_information(X) - (
+                len(left) / N * self.calculate_information(left)
+                + len(right) / N * self.calculate_information(right)
             )
 
-            if info_gain > max_info_gain:
-                max_info_gain = info_gain
+            if information_gain > max_info_gain:
+                max_info_gain = information_gain
                 best_feature = i
                 threshold = mean
 
@@ -198,10 +193,13 @@ class DecisionTree:
 
         X_left, X_right = split(X, msk)
         y_left, y_right = split(y, msk)
-        left_child = self.recurse(X_left, y_left, depth+1)
-        right_child = self.recurse(X_right, y_right, depth+1)
 
-        return Node(feature=best_feature, threshold=threshold, left=left_child, right=right_child)
+        return Node(
+            feature=best_feature,
+            threshold=threshold,
+            left=self.build_tree(X_left, y_left, depth + 1),
+            right=self.build_tree(X_right, y_right, depth + 1),
+        )
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -209,19 +207,19 @@ class DecisionTree:
         """
         if not self.root:
             raise ValueError("fit must be called before calling predict")
-        return np.array([self.recurse2(self.root, x) for x in X])
+        return np.array([self.traverse_tree(self.root, x) for x in X])
 
-    def recurse2(self, root: Node, x: np.ndarray) -> int:
+    def traverse_tree(self, root: Node, x: np.ndarray) -> int:
         if root.is_leaf():
             return root.value
         feature_value = x[root.feature]
         if feature_value <= root.threshold:
-            return self.recurse2(root.left, x)
-        return self.recurse2(root.right, x)
+            return self.traverse_tree(root.left, x)
+        return self.traverse_tree(root.right, x)
 
     def score(self, y: np.ndarray, predicted_y) -> np.ndarray:
         N = len(y)
-        return np.count_nonzero(predicted_y == y)/N
+        return np.count_nonzero(predicted_y == y) / N
 
 
 if __name__ == "__main__":
@@ -230,7 +228,7 @@ if __name__ == "__main__":
     from sklearn.model_selection import train_test_split
     from sklearn.metrics import accuracy_score
 
-    seed = 123
+    seed = 0
 
     np.random.seed(seed)
 
@@ -251,4 +249,6 @@ if __name__ == "__main__":
             y_train, rf.predict(X_train)))
         print("Validation accuracy: ", accuracy_score(y_val, rf.predict(X_val)))
         print(f"Custom score: {rf.score(y_val, rf.predict(X_val))}")
-        print("--------------------------------------------------------------------------------------")
+        print(
+            "--------------------------------------------------------------------------------------"
+        )
