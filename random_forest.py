@@ -1,5 +1,5 @@
 import numpy as np
-from decision_tree import DecisionTree
+from decision_tree import DecisionTree, most_common
 
 
 class RandomForest:
@@ -14,16 +14,27 @@ class RandomForest:
         self.max_depth = max_depth
         self.criterion = criterion
         self.max_features = max_features
+        self.estimators = None
 
     def fit(self, X: np.ndarray, y: np.ndarray):
-        raise NotImplementedError(
-            "Implement this function"
-        )  # Remove this line when you implement the function
+        self.estimators = [self.make_random_estimator(
+            X, y) for _ in range(self.n_estimators)]
+
+    def make_random_estimator(self, X, y) -> DecisionTree:
+        estimator = DecisionTree(
+            max_depth=self.max_depth, criterion=self.criterion, max_features=self.max_features)
+        mask = np.random.choice(
+            range(len(X)), size=len(X), replace=True)
+        sub_X, sub_y = X[mask], y[mask]
+        estimator.fit(sub_X, sub_y)
+        return estimator
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        raise NotImplementedError(
-            "Implement this function"
-        )  # Remove this line when you implement the function
+        if not self.estimators:
+            raise ValueError("Not fitted")
+        predictions = np.array([estimator.predict(X)
+                               for estimator in self.estimators])
+        return np.array([most_common(col) for col in predictions.T])
 
 
 if __name__ == "__main__":
