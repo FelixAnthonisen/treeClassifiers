@@ -199,6 +199,8 @@ class DecisionTree:
                 best_feature = i
                 threshold = mean
 
+        if max_info_gain <= 0:
+            return Node(value=most_common(y))
         msk = mask(X.T[best_feature], threshold)
 
         X_left, X_right = split(X, msk)
