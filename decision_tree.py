@@ -139,14 +139,17 @@ class DecisionTree:
     ) -> None:
         self.root = None
         self.max_depth = max_depth
-        self.max_features = np.log2 if max_features == "log2" else np.sqrt if max_features == "sqrt" else identity
+        self.max_features = (
+            np.log2
+            if max_features == "log2"
+            else np.sqrt if max_features == "sqrt" else identity
+        )
         if criterion == "entropy":
             self.calculate_information = entropy
         elif criterion == "gini":
             self.calculate_information = gini_index
         else:
-            raise ValueError(
-                "Invalid criterion: Must be either 'entropy' or 'gini'")
+            raise ValueError("Invalid criterion: Must be either 'entropy' or 'gini'")
 
     def fit(
         self,
@@ -181,8 +184,7 @@ class DecisionTree:
         threshold = 0.0
 
         num_features = int(self.max_features(len(X[0])))
-        feature_mask = np.random.choice(
-            range(len(X[0])), num_features, replace=False)
+        feature_mask = np.random.choice(range(len(X[0])), num_features, replace=False)
 
         for features, i in zip(X.T[feature_mask], feature_mask):
             mean = np.mean(features)
@@ -253,10 +255,9 @@ if __name__ == "__main__":
 
     # Expect the training accuracy to be 1.0 when max_depth=None
     for d in (1, 2, 3, 4, 5, 6, 7, 8, 10):
-        rf = DecisionTree(criterion="gini", max_depth=d)
+        rf = DecisionTree(criterion="entropy", max_depth=d)
         rf.fit(X_train, y_train)
-        print("Training accuracy: ", accuracy_score(
-            y_train, rf.predict(X_train)))
+        print("Training accuracy: ", accuracy_score(y_train, rf.predict(X_train)))
         print("Validation accuracy: ", accuracy_score(y_val, rf.predict(X_val)))
         print(f"Custom score: {rf.score(y_val, rf.predict(X_val))}")
         print(
