@@ -136,17 +136,22 @@ class DecisionTree:
         max_depth: int | None = None,
         criterion: str = "entropy",
         max_features: str | None = None,
+        random_state: int = 0,
     ) -> None:
         self.root = None
         self.max_depth = max_depth
-        self.max_features = np.log2 if max_features == "log2" else np.sqrt if max_features == "sqrt" else identity
+        self.max_features = (
+            np.log2
+            if max_features == "log2"
+            else np.sqrt if max_features == "sqrt" else identity
+        )
+        np.random.seed(random_state)
         if criterion == "entropy":
             self.calculate_information = entropy
         elif criterion == "gini":
             self.calculate_information = gini_index
         else:
-            raise ValueError(
-                "Invalid criterion: Must be either 'entropy' or 'gini'")
+            raise ValueError("Invalid criterion: Must be either 'entropy' or 'gini'")
 
     def fit(
         self,
@@ -162,9 +167,9 @@ class DecisionTree:
         if len(y) != len(X):
             raise ValueError("Values and targets must be same length")
 
-        self.root = self.build_tree(X, y, 0)
+        self.root = self._build_tree(X, y, 0)
 
-    def build_tree(self, X: np.ndarray, y: np.ndarray, depth: int) -> Node:
+    def _build_tree(self, X: np.ndarray, y: np.ndarray, depth: int) -> Node:
 
         if len(set(y)) == 1:
             return Node(value=y[0])
@@ -181,8 +186,7 @@ class DecisionTree:
         threshold = 0.0
 
         num_features = int(self.max_features(len(X[0])))
-        feature_mask = np.random.choice(
-            range(len(X[0])), num_features, replace=False)
+        feature_mask = np.random.choice(range(len(X[0])), num_features, replace=False)
 
         for features, i in zip(X.T[feature_mask], feature_mask):
             mean = np.mean(features)
@@ -209,8 +213,8 @@ class DecisionTree:
         return Node(
             feature=best_feature,
             threshold=threshold,
-            left=self.build_tree(X_left, y_left, depth + 1),
-            right=self.build_tree(X_right, y_right, depth + 1),
+            left=self._build_tree(X_left, y_left, depth + 1),
+            right=self._build_tree(X_right, y_right, depth + 1),
         )
 
     def predict(self, X: np.ndarray) -> np.ndarray:
@@ -219,19 +223,15 @@ class DecisionTree:
         """
         if not self.root:
             raise ValueError("fit must be called before calling predict")
-        return np.array([self.traverse_tree(self.root, x) for x in X])
+        return np.array([self._traverse_tree(self.root, x) for x in X])
 
-    def traverse_tree(self, root: Node, x: np.ndarray) -> int:
+    def _traverse_tree(self, root: Node, x: np.ndarray) -> int:
         if root.is_leaf():
             return root.value
         feature_value = x[root.feature]
         if feature_value <= root.threshold:
-            return self.traverse_tree(root.left, x)
-        return self.traverse_tree(root.right, x)
-
-    def score(self, y: np.ndarray, predicted_y) -> np.ndarray:
-        N = len(y)
-        return np.count_nonzero(predicted_y == y) / N
+            return self._traverse_tree(root.left, x)
+        return self._traverse_tree(root.right, x)
 
 
 if __name__ == "__main__":
@@ -243,7 +243,6 @@ if __name__ == "__main__":
     seed = 0
 
     np.random.seed(seed)
-
     X, y = make_classification(
         n_samples=100, n_features=10, random_state=seed, n_classes=2
     )
@@ -252,13 +251,8 @@ if __name__ == "__main__":
     )
 
     # Expect the training accuracy to be 1.0 when max_depth=None
-    for d in (1, 2, 3, 4, 5, 6, 7, 8, 10):
-        rf = DecisionTree(criterion="gini", max_depth=d)
+    for d in (1, 2, 3, 4, 5, 6, 7, 8, 10, None):
+        rf = DecisionTree(criterion="entropy", max_depth=d)
         rf.fit(X_train, y_train)
-        print("Training accuracy: ", accuracy_score(
-            y_train, rf.predict(X_train)))
+        print("Training accuracy: ", accuracy_score(y_train, rf.predict(X_train)))
         print("Validation accuracy: ", accuracy_score(y_val, rf.predict(X_val)))
-        print(f"Custom score: {rf.score(y_val, rf.predict(X_val))}")
-        print(
-            "--------------------------------------------------------------------------------------"
-        )

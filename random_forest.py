@@ -9,22 +9,29 @@ class RandomForest:
         max_depth: int = 5,
         criterion: str = "entropy",
         max_features: None | str = "sqrt",
+        random_state: int = 0,
     ) -> None:
         self.n_estimators = n_estimators
         self.max_depth = max_depth
         self.criterion = criterion
         self.max_features = max_features
         self.estimators = None
+        self.random_state = random_state
+        np.random.seed(random_state)
 
     def fit(self, X: np.ndarray, y: np.ndarray):
-        self.estimators = [self.make_random_estimator(
-            X, y) for _ in range(self.n_estimators)]
+        self.estimators = [
+            self.make_random_estimator(X, y) for _ in range(self.n_estimators)
+        ]
 
     def make_random_estimator(self, X, y) -> DecisionTree:
         estimator = DecisionTree(
-            max_depth=self.max_depth, criterion=self.criterion, max_features=self.max_features)
-        mask = np.random.choice(
-            range(len(X)), size=len(X), replace=True)
+            max_depth=self.max_depth,
+            criterion=self.criterion,
+            max_features=self.max_features,
+            random_state=self.random_state,
+        )
+        mask = np.random.choice(range(len(X)), size=len(X), replace=True)
         sub_X, sub_y = X[mask], y[mask]
         estimator.fit(sub_X, sub_y)
         return estimator
@@ -32,8 +39,8 @@ class RandomForest:
     def predict(self, X: np.ndarray) -> np.ndarray:
         if not self.estimators:
             raise ValueError("Not fitted")
-        predictions = np.array([estimator.predict(X)
-                               for estimator in self.estimators])
+
+        predictions = np.array([estimator.predict(X) for estimator in self.estimators])
         return np.array([most_common(col) for col in predictions.T])
 
 
