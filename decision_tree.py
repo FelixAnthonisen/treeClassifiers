@@ -101,30 +101,6 @@ class Node:
         """
         return self.value is not None
 
-    def pretty_print(self, level: int = 0, prefix: str = "") -> None:
-        """
-        Pretty print the decision tree starting from this node.
-        """
-        if self.is_leaf():
-            print(f"{prefix}{' ' * (level * 4)}[Leaf] Value: {self.value}")
-        else:
-            print(
-                f"""{prefix}{' ' * (level * 4)
-                             }[Feature {self.feature}] <= {self.threshold}"""
-            )
-            if self.left is not None:
-                if self.right is not None:
-                    # Print left and right branches
-                    self.left.pretty_print(level + 1, prefix + "├── ")
-                    self.right.pretty_print(level + 1, prefix + "└── ")
-                else:
-                    # Only print left branch
-                    self.left.pretty_print(level + 1, prefix + "└── ")
-            else:
-                if self.right is not None:
-                    # Only print right branch
-                    self.right.pretty_print(level + 1, prefix + "└── ")
-
 
 def identity(n):
     return n
@@ -145,7 +121,7 @@ class DecisionTree:
             if max_features == "log2"
             else np.sqrt if max_features == "sqrt" else identity
         )
-        np.random.seed(random_state)
+        self.rng = np.random.default_rng(random_state)
         if criterion == "entropy":
             self.calculate_information = entropy
         elif criterion == "gini":
@@ -186,7 +162,7 @@ class DecisionTree:
         threshold = 0.0
 
         num_features = int(self.max_features(len(X[0])))
-        feature_mask = np.random.choice(range(len(X[0])), num_features, replace=False)
+        feature_mask = self.rng.choice(range(len(X[0])), num_features, replace=False)
 
         for features, i in zip(X.T[feature_mask], feature_mask):
             mean = np.mean(features)
@@ -205,6 +181,7 @@ class DecisionTree:
 
         if max_info_gain <= 0:
             return Node(value=most_common(y))
+
         msk = mask(X.T[best_feature], threshold)
 
         X_left, X_right = split(X, msk)

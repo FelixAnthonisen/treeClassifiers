@@ -17,7 +17,7 @@ class RandomForest:
         self.max_features = max_features
         self.estimators = None
         self.random_state = random_state
-        np.random.seed(random_state)
+        self.rng = np.random.default_rng(random_state)
 
     def fit(self, X: np.ndarray, y: np.ndarray):
         self.estimators = [
@@ -31,7 +31,7 @@ class RandomForest:
             max_features=self.max_features,
             random_state=self.random_state,
         )
-        mask = np.random.choice(range(len(X)), size=len(X), replace=True)
+        mask = self.rng.choice(range(len(X)), size=len(X), replace=True)
         sub_X, sub_y = X[mask], y[mask]
         estimator.fit(sub_X, sub_y)
         return estimator
