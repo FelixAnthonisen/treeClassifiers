@@ -169,7 +169,7 @@ class DecisionTree:
             msk = mask(features, mean)
             left, right = split(X, msk)
 
-            information_gain = self.calculate_information(X) - (
+            information_gain = self.calculate_information(y) - (
                 len(left) / N * self.calculate_information(left)
                 + len(right) / N * self.calculate_information(right)
             )
