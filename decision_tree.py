@@ -1,16 +1,11 @@
 import numpy as np
 from typing import Self
 
-"""
-This is a suggested template and you do not need to follow it. You can change any part of it to fit your needs.
-There are some helper functions that might be useful to implement first.
-At the end there is some test code that you can use to test your implementation on synthetic data by running this file.
-"""
-
 
 def count(y: np.ndarray) -> np.ndarray:
     """
     Count unique values in y and return the proportions of each class sorted by label in ascending order.
+
     Example:
         count(np.array([3, 0, 0, 1, 1, 1, 2, 2, 2, 2, 5])) -> np.array([0.2, 0.3, 0.4, 0.1])
     """
@@ -21,7 +16,9 @@ def count(y: np.ndarray) -> np.ndarray:
 def gini_index(y: np.ndarray) -> float:
     """
     Return the Gini Index of a given NumPy array y.
+
     The forumla for the Gini Index is 1 - sum(probs^2), where probs are the proportions of each class in y.
+
     Example:
         gini_index(np.array([1, 1, 2, 2, 3, 3, 4, 4])) -> 0.75
     """
@@ -38,6 +35,7 @@ def entropy(y: np.ndarray) -> float:
 def mask(x: np.ndarray, value: float) -> np.ndarray:
     """
     Return a boolean mask for the elements of x satisfying x <= value.
+
     Example:
         split(np.array([1, 2, 3, 4, 5, 2]), 3) -> np.array([True, True, True, False, False, True])
     """
@@ -54,6 +52,7 @@ def split(x: np.ndarray, msk: np.ndarray) -> tuple[np.ndarray]:
 def most_common(y: np.ndarray) -> int:
     """
     Return the most common element in y.
+
     Example:
         most_common(np.array([1, 2, 2, 3, 3, 3, 4, 4, 4, 4])) -> 4
     """
@@ -63,6 +62,7 @@ def most_common(y: np.ndarray) -> int:
 def identical_feature_values(x: np.ndarray) -> bool:
     """
     Return True if all the values in x are the same.
+
     Example:
         identical_feature_vals(np.array([1, 1, 1, 1, 1])) -> True
         identical_feature_vals(np.array([1, 2, 3, 4, 5])) -> False
@@ -102,10 +102,6 @@ class Node:
         return self.value is not None
 
 
-def identity(n):
-    return n
-
-
 class DecisionTree:
     def __init__(
         self,
@@ -116,12 +112,14 @@ class DecisionTree:
     ) -> None:
         self.root = None
         self.max_depth = max_depth
-        self.max_features = (
-            np.log2
-            if max_features == "log2"
-            else np.sqrt if max_features == "sqrt" else identity
-        )
         self.rng = np.random.default_rng(random_state)
+
+        self.calc_num_features = lambda x: x
+        if max_features == "log2":
+            self.calc_num_features = np.log2
+        elif max_features == "sqrt":
+            self.calc_num_features = np.sqrt
+
         if criterion == "entropy":
             self.calculate_information = entropy
         elif criterion == "gini":
@@ -146,28 +144,25 @@ class DecisionTree:
         self.root = self._build_tree(X, y, 0)
 
     def _build_tree(self, X: np.ndarray, y: np.ndarray, depth: int) -> Node:
-
-        if len(set(y)) == 1:
-            return Node(value=y[0])
-
         max_depth_reached = self.max_depth and depth >= self.max_depth
 
         if identical_feature_values(X) or max_depth_reached:
             return Node(value=most_common(y))
 
-        N = len(y)
+        if len(set(y)) == 1:
+            return Node(value=y[0])
 
+        N, M = len(y), len(X[0])
         max_info_gain = -float("inf")
         best_feature = None
         threshold = 0.0
-
-        num_features = int(self.max_features(len(X[0])))
-        feature_mask = self.rng.choice(range(len(X[0])), num_features, replace=False)
+        num_features = int(self.calc_num_features(M))
+        feature_mask = self.rng.choice(range(M), num_features, replace=False)
 
         for features, i in zip(X.T[feature_mask], feature_mask):
             mean = np.mean(features)
             msk = mask(features, mean)
-            left, right = split(X, msk)
+            left, right = split(y, msk)
 
             information_gain = self.calculate_information(y) - (
                 len(left) / N * self.calculate_information(left)
@@ -179,11 +174,11 @@ class DecisionTree:
                 best_feature = i
                 threshold = mean
 
+        # is needed in case all features in the subset are equal
         if max_info_gain <= 0:
             return Node(value=most_common(y))
 
         msk = mask(X.T[best_feature], threshold)
-
         X_left, X_right = split(X, msk)
         y_left, y_right = split(y, msk)
 
@@ -196,7 +191,7 @@ class DecisionTree:
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
-        Given a NumPy array X of features, return a NumPy array of predicted integer labels.
+        Given a NumPy array X of features, returns a NumPy array of predicted integer labels.
         """
         if not self.root:
             raise ValueError("fit must be called before calling predict")
