@@ -11,12 +11,14 @@ class RandomForest:
         max_features: None | str = "sqrt",
         random_state: int = 0,
     ) -> None:
-        self.n_estimators = n_estimators
-        self.max_depth = max_depth
-        self.criterion = criterion
-        self.max_features = max_features
-        self.estimators = None
+        self.params = {
+            "n_estimators": n_estimators,
+            "max_depth": max_depth,
+            "criterion": criterion,
+            "max_features": max_features,
+        }
         self.random_state = random_state
+        self.estimators = None
         self.rng = np.random.default_rng(random_state)
 
     def fit(self, X: np.ndarray, y: np.ndarray):
@@ -42,6 +44,15 @@ class RandomForest:
 
         predictions = np.array([estimator.predict(X) for estimator in self.estimators])
         return np.array([most_common(col) for col in predictions.T])
+
+    def get_params(self, deep=True):
+        return self.params
+
+    def set_params(self, **params):
+        for param, value in params.items():
+            setattr(self, param, value)
+
+        return self
 
 
 if __name__ == "__main__":
