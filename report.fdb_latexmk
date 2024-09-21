@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1726942957.96381 "/Users/jakobalexandersen/inf264/INF264-project1/report.tex" "report.pdf" "report" 1726942959.59047 2
-  "/Users/jakobalexandersen/inf264/INF264-project1/report.tex" 1726942955.93707 32773 8164f32fab1611580fe10e31eb6c113c ""
+["pdflatex"] 1726944789.17427 "/Users/jakobalexandersen/inf264/INF264-project1/report.tex" "report.pdf" "report" 1726944790.79752 2
+  "/Users/jakobalexandersen/inf264/INF264-project1/report.tex" 1726944787.11344 32763 d86038d4a8c25dd0080da52feeeb4a32 ""
   "/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc" 1136849721 2971 def0b6c1f0b107b3b936def894055589 ""
   "/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc" 1136849721 2900 1537cc8184ad1792082cd229ecc269f4 ""
   "/usr/local/texlive/2024/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -208,9 +208,9 @@
   "/usr/local/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1726940018.06564 5467645 128b85b7cde5f5edc5cb7f1dd7ff8736 ""
   "/usr/local/texlive/2024/texmf-var/web2c/pdftex/pdflatex.fmt" 1726939956 8221429 a1bd5cb20a4e48a0db92db337ad97724 ""
   "/usr/local/texlive/2024/texmf.cnf" 1710266656 577 e590dabc9e28c5b61546e15f63eebcdf ""
-  "report.aux" 1726942959.47745 6572 73ad0840fc42abb72b0d8ec0b8c4be24 "pdflatex"
-  "report.out" 1726942959.4783 4321 3bc1cc15b332c428a77411bc5d0a8371 "pdflatex"
-  "report.tex" 1726942955.93707 32773 8164f32fab1611580fe10e31eb6c113c ""
+  "report.aux" 1726944790.68313 6538 d20a833d50531b76023fdb75fec79547 "pdflatex"
+  "report.out" 1726944790.6842 4296 f0a2a9daa6d52cbd9e5593752f2b8fea "pdflatex"
+  "report.tex" 1726944787.11344 32763 d86038d4a8c25dd0080da52feeeb4a32 ""
   "report_files/report_4_0.png" 1726942094.36493 118350 da76cbcf8da8f3ea926e6817ea9b5089 ""
   "report_files/report_5_0.png" 1726942094.36512 86021 3f7712a37b4999563ebf393be53fbeae ""
   "report_files/report_7_0.png" 1726942094.36523 74742 40b0b30bc4bfb237d99b72d4cb8e87c8 ""
