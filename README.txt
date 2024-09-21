@@ -1,4 +1,4 @@
-Run the notebook `run_experiments.ipynb` to reproduce the results in my report.
+Run the notebook `run_experiments.ipynb` to reproduce the results in our report.
 
 Python libraries used: NumPy and sklearn, 
 
