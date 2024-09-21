@@ -110,22 +110,16 @@ class DecisionTree:
         max_features: str | None = None,
         random_state: int = 0,
     ) -> None:
+        self.params = {
+            "max_depth": max_depth,
+            "criterion": criterion,
+            "max_features": max_features,
+        }
         self.root = None
-        self.max_depth = max_depth
         self.rng = np.random.default_rng(random_state)
 
-        self.calc_num_features = lambda x: x
-        if max_features == "log2":
-            self.calc_num_features = np.log2
-        elif max_features == "sqrt":
-            self.calc_num_features = np.sqrt
-
-        if criterion == "entropy":
-            self.calculate_information = entropy
-        elif criterion == "gini":
-            self.calculate_information = gini_index
-        else:
-            raise ValueError("Invalid criterion: Must be either 'entropy' or 'gini'")
+        self.set_calc_num_features()
+        self.set_calc_information()
 
     def fit(
         self,
@@ -144,7 +138,9 @@ class DecisionTree:
         self.root = self._build_tree(X, y, 0)
 
     def _build_tree(self, X: np.ndarray, y: np.ndarray, depth: int) -> Node:
-        max_depth_reached = self.max_depth and depth >= self.max_depth
+        max_depth_reached = (
+            self.params["max_depth"] and depth >= self.params["max_depth"]
+        )
 
         if identical_feature_values(X) or max_depth_reached:
             return Node(value=most_common(y))
@@ -205,6 +201,31 @@ class DecisionTree:
             return self._traverse_tree(root.left, x)
         return self._traverse_tree(root.right, x)
 
+    def get_params(self, deep=True):
+        return self.params
+
+    def set_params(self, **params):
+        for param, value in params.items():
+            setattr(self, param, value)
+        self.set_calc_num_features()
+        self.set_calc_information()
+        return self
+
+    def set_calc_num_features(self):
+        self.calc_num_features = lambda x: x
+        if self.params["max_features"] == "log2":
+            self.calc_num_features = np.log2
+        elif self.params["max_features"] == "sqrt":
+            self.calc_num_features = np.sqrt
+
+    def set_calc_information(self):
+        if self.params["criterion"] == "entropy":
+            self.calculate_information = entropy
+        elif self.params["criterion"] == "gini":
+            self.calculate_information = gini_index
+        else:
+            raise ValueError("Invalid criterion: Must be either 'entropy' or 'gini'")
+
 
 if __name__ == "__main__":
     # Test the DecisionTree class on a synthetic dataset
@@ -224,7 +245,7 @@ if __name__ == "__main__":
 
     # Expect the training accuracy to be 1.0 when max_depth=None
     for d in (1, 2, 3, 4, 5, 6, 7, 8, 10, None):
-        rf = DecisionTree(criterion="entropy", max_depth=d)
+        rf = DecisionTree(criterion="entropy", max_depth=d, random_state=seed)
         rf.fit(X_train, y_train)
         print("Training accuracy: ", accuracy_score(y_train, rf.predict(X_train)))
         print("Validation accuracy: ", accuracy_score(y_val, rf.predict(X_val)))
