@@ -110,11 +110,9 @@ class DecisionTree:
         max_features: str | None = None,
         random_state: int = 0,
     ) -> None:
-        self.params = {
-            "max_depth": max_depth,
-            "criterion": criterion,
-            "max_features": max_features,
-        }
+        self.max_depth = max_depth
+        self.criterion = criterion
+        self.max_features = max_features
         self.root = None
         self.rng = np.random.default_rng(random_state)
 
@@ -138,9 +136,7 @@ class DecisionTree:
         self.root = self._build_tree(X, y, 0)
 
     def _build_tree(self, X: np.ndarray, y: np.ndarray, depth: int) -> Node:
-        max_depth_reached = (
-            self.params["max_depth"] and depth >= self.params["max_depth"]
-        )
+        max_depth_reached = self.max_depth and depth >= self.max_depth
 
         if identical_feature_values(X) or max_depth_reached:
             return Node(value=most_common(y))
@@ -202,7 +198,11 @@ class DecisionTree:
         return self._traverse_tree(root.right, x)
 
     def get_params(self, deep=True):
-        return self.params
+        return {
+            "max_depth": self.max_depth,
+            "criterion": self.criterion,
+            "max_features": self.max_features,
+        }
 
     def set_params(self, **params):
         for param, value in params.items():
@@ -213,15 +213,15 @@ class DecisionTree:
 
     def set_calc_num_features(self):
         self.calc_num_features = lambda x: x
-        if self.params["max_features"] == "log2":
+        if self.max_features == "log2":
             self.calc_num_features = np.log2
-        elif self.params["max_features"] == "sqrt":
+        elif self.max_features == "sqrt":
             self.calc_num_features = np.sqrt
 
     def set_calc_information(self):
-        if self.params["criterion"] == "entropy":
+        if self.criterion == "entropy":
             self.calculate_information = entropy
-        elif self.params["criterion"] == "gini":
+        elif self.criterion == "gini":
             self.calculate_information = gini_index
         else:
             raise ValueError("Invalid criterion: Must be either 'entropy' or 'gini'")
