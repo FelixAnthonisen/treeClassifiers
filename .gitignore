@@ -1,3 +1,7 @@
 *.pyc
 .vscode
 deliverable
+deliverable
+INF*
+__pychache__
+proj*
