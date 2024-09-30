@@ -64,7 +64,7 @@ if __name__ == "__main__":
     from sklearn.model_selection import train_test_split
     from sklearn.metrics import accuracy_score
 
-    seed = 0
+    seed = 1
 
     np.random.seed(seed)
 
